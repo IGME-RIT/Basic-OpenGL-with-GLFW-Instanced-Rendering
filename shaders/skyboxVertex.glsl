@@ -1,5 +1,5 @@
 /*
-Title: Sky Boxes
+Title: Instanced Rendering
 File Name: skyboxVertex.glsl
 Copyright ? 2016
 Author: David Erbelding

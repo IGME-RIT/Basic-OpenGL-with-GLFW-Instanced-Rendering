@@ -1,5 +1,5 @@
 /*
-Title: Specular Maps
+Title: Instanced Rendering
 File Name: shader.cpp
 Copyright ? 2016
 Author: David Erbelding

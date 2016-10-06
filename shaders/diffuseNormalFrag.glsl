@@ -1,5 +1,5 @@
 /*
-Title: Specular Maps
+Title: Instanced Rendering
 File Name: fragment.glsl
 Copyright ? 2016
 Author: David Erbelding
@@ -22,30 +22,38 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
 #version 400 core
 
 in vec3 position;
 in vec2 uv;
 in mat3 tbn;
 
+uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
-uniform samplerCube cubeMap;
-
-// Camera position is required for reflection the same way it's used for specular shading
-uniform vec3 cameraPosition;
 
 void main(void)
 {
+	vec4 ambientLight = vec4(.1, .1, .2, 1);
+	vec3 pointLightPosition = vec3(1000, 500, 100);
+	vec4 pointLightColor = vec4(1, 1, 1, 1);
+	vec3 pointLightAttenuation = vec3(1, 1, 0);
+	float pointLightRange = 2000;
+
 	// calculate normal from normal map
 	vec3 texnorm = normalize(vec3(texture(normalMap, uv)) * 2.0 - 1.0);
 	vec3 norm = tbn * texnorm;
 
-	// This part should mostly make sense.
-	// We get a vector from the surface to the camera position.
-	vec3 surfaceToEye = cameraPosition - position;
-	// Reflect that vector over the surface normal, giving us the direction light would be reflecting to our eye from
-	vec3 outVec = reflect(surfaceToEye, norm);
 	
-	// We use that direction vector to read from the cube map (like a backwards skybox)
-	gl_FragColor = texture(cubeMap, outVec);
+	// Calculate diffuse lighting
+	vec3 lightDir = pointLightPosition - position;
+	float distance = length(lightDir) / pointLightRange;
+	float attenuation = 1 / (distance * distance * pointLightAttenuation.x + distance * pointLightAttenuation.y + pointLightAttenuation.z);
+	float diffuseLight = clamp(dot(normalize(lightDir), normalize(norm)), 0, 1);
+	vec4 finalDiffuseColor = clamp(pointLightColor * (diffuseLight) + ambientLight, 0, 1);
+
+
+	// finally, sample from the texuture and apply the light.
+	vec4 color = texture(diffuseMap, uv);
+	gl_FragColor = (color * finalDiffuseColor);
 }

@@ -1,5 +1,5 @@
 /*
-Title: Sky Boxes
+Title: Instanced Rendering
 File Name: skyboxFragment.glsl
 Copyright ? 2016
 Author: David Erbelding

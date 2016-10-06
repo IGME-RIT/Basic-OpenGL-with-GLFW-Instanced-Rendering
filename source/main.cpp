@@ -1,5 +1,5 @@
 ﻿/*
-Title: Specular Maps
+Title: Instanced Rendering
 File Name: main.cpp
 Copyright � 2016
 Author: David Erbelding
@@ -101,26 +101,22 @@ int main(int argc, char **argv)
 
 	// Create Shaders
     Shader* vertexShader = new Shader("../shaders/vertex.glsl", GL_VERTEX_SHADER);
-    Shader* fragmentShader = new Shader("../shaders/specFrag.glsl", GL_FRAGMENT_SHADER);
+    Shader* fragmentShader = new Shader("../shaders/diffuseNormalFrag.glsl", GL_FRAGMENT_SHADER);
 
     // Create A Shader Program
     ShaderProgram* shaderProgram = new ShaderProgram();
     shaderProgram->AttachShader(vertexShader);
     shaderProgram->AttachShader(fragmentShader);
 
-
     // Create a material using a texture for our model
-    Material* specMat = new Material(shaderProgram);
-    specMat->SetTexture("diffuseMap", new Texture("../assets/iron_buckler_diffuse.png"));
+    Material* diffuseNormalMat = new Material(shaderProgram);
+    diffuseNormalMat->SetTexture("diffuseMap", new Texture("../assets/iron_buckler_diffuse.png"));
     Texture* texNorm = new Texture("../assets/iron_buckler_normal.png");
-    specMat->SetTexture("normalMap", texNorm);
-    specMat->SetTexture("specularMap", new Texture("../assets/iron_buckler_specular.png"));
-    specMat->SetInt("specularExponent", 64);
+    diffuseNormalMat->SetTexture("normalMap", texNorm);
 
 
     Shader* skyboxVertexShader = new Shader("../shaders/skyboxvertex.glsl", GL_VERTEX_SHADER);
     Shader* skyboxfragmentShader = new Shader("../shaders/skyboxfragment.glsl", GL_FRAGMENT_SHADER);
-
 
     // Create A Shader Program for the skybox
     ShaderProgram* skyboxShaderProgram = new ShaderProgram();
@@ -141,21 +137,6 @@ int main(int argc, char **argv)
     CubeMap* sky = new CubeMap(faceFilePaths);
     skyMat->SetCubeMap("cubeMap", sky);
 
-
-    // Create a shaders for reflection
-    Shader* reflectFrag = new Shader("../shaders/reflectFrag.glsl", GL_FRAGMENT_SHADER);
-    ShaderProgram* reflectiveSurface = new ShaderProgram();
-    reflectiveSurface->AttachShader(vertexShader);
-    reflectiveSurface->AttachShader(reflectFrag);
-
-    // Set up material:
-    // A mirror-like surface needs a cube map to get reflect
-    // Normal maps aren't required, but we might as well use one to get a more detailed surface
-    Material* reflectMat = new Material(reflectiveSurface);
-    reflectMat->SetTexture("normalMap", texNorm);
-    reflectMat->SetCubeMap("cubeMap", sky);
-
-
     // Print instructions to the console.
     std::cout << "Use WASD to move, and the mouse to look around." << std::endl;
     std::cout << "Press escape or alt-f4 to exit." << std::endl;
@@ -170,7 +151,7 @@ int main(int argc, char **argv)
         // Exit when escape is pressed.
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) break;
 
-        /// Calculate delta time and frame rate
+        // Calculate delta time and frame rate
         float dt = glfwGetTime();
         frames++;
         secCounter += dt;
@@ -214,29 +195,21 @@ int main(int argc, char **argv)
 
         // Set the camera and world matrices to the shader
         // The string names correspond directly to the uniform names within the shader.
-        specMat->SetMatrix("cameraView", viewProjection);
-        // For specularity, we also need the position of the camera to calculate reflections
-        specMat->SetVec3("cameraPosition", controller.GetTransform().Position());
+        diffuseNormalMat->SetMatrix("cameraView", viewProjection);
 
 
-        // Bind the material
-        specMat->Bind();
-        //model->DrawInstanced(matrices);
-        specMat->Unbind();
+        // Bind the material and draw the model
+        diffuseNormalMat->Bind();
 
-
-        // Reflection works very similarly to specularity
-        reflectMat->SetMatrix("cameraView", viewProjection);
-        reflectMat->SetVec3("cameraPosition", controller.GetTransform().Position());
-
-        reflectMat->Bind();
+        // Instead of just drawing one, we pass in a vector of matrices (this function is where the instancing really happens)
         model->DrawInstanced(matrices);
-        reflectMat->Unbind();
+
+        diffuseNormalMat->Unbind();
 
 
-        // Draw the skybox
-        glm::mat4 specialView = projection * glm::mat4(glm::mat3(view));
-        skyMat->SetMatrix("cameraView", specialView);
+        // Draw a skybox
+        glm::mat4 viewRotation = projection * glm::mat4(glm::mat3(view));
+        skyMat->SetMatrix("cameraView", viewRotation);
         glDepthFunc(GL_LEQUAL);
         skyMat->Bind();
         cube->Draw();
@@ -258,9 +231,8 @@ int main(int argc, char **argv)
     delete cube;
 
     // Free memory used by materials and all sub objects
-    delete specMat;
+    delete diffuseNormalMat;
     delete skyMat;
-    delete reflectMat;
 
 	// Free GLFW memory.
 	glfwTerminate();

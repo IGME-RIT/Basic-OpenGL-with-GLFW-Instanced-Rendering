@@ -1,5 +1,5 @@
 /*
-Title: Specular Maps
+Title: Instanced Rendering
 File Name: vertex.glsl
 Copyright ? 2016
 Author: David Erbelding
@@ -30,9 +30,11 @@ layout(location = 0) in vec3 in_position;
 layout(location = 1) in vec2 in_uv;
 layout(location = 2) in vec3 in_normal;
 layout(location = 3) in vec3 in_tangent;
+
+// This is really the only change here, we put the world Matrix at location 4, and say it's a mat4
+// In reality, it's taking up locations 5, 6, and 7 as well, because each location is 4 floats.
 layout(location = 4) in mat4 in_worldMat;
 
-// uniform will contain the world matrix.
 
 uniform mat4 cameraView;
 

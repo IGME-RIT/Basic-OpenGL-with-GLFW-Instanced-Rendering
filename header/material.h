@@ -1,5 +1,5 @@
 /*
-Title: Specular Maps
+Title: Instanced Rendering
 File Name: material.h
 Copyright ? 2016
 Author: David Erbelding

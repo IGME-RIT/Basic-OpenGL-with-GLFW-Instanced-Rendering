@@ -1,5 +1,5 @@
 /*
-Title: Specular Maps
+Title: Instanced Rendering
 File Name: mesh.cpp
 Copyright ? 2016
 Author: David Erbelding
@@ -308,28 +308,38 @@ void Mesh::Draw()
 
 void Mesh::DrawInstanced(std::vector<glm::mat4> matrices)
 {
-    // Buffer matrix data and set up attributes
-    glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
-    glBufferData(GL_ARRAY_BUFFER, matrices.size() * sizeof(glm::mat4), matrices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(0));
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 4));
-    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 8));
-    glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 12));
-    glVertexAttribDivisor(4, 1);
-    glVertexAttribDivisor(5, 1);
-    glVertexAttribDivisor(6, 1);
-    glVertexAttribDivisor(7, 1);
-
-    // Bind the vertex buffer and set the Vertex Attribute.
+    // First, we bind the vertex buffer and set the Vertex Attributes just like we normally would
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
+    // These take up the first 3 attribute slots
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3dUVNormal), (void*)0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3dUVNormal), (void*)sizeof(glm::vec3));
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex3dUVNormal), (void*)(sizeof(glm::vec3) + sizeof(glm::vec2)));
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex3dUVNormal), (void*)(2 * sizeof(glm::vec3) + sizeof(glm::vec2)));
+
+    // This is where things get interesting, first we want to buffer our matrix data for openGL
+    glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
+    glBufferData(GL_ARRAY_BUFFER, matrices.size() * sizeof(glm::mat4), matrices.data(), GL_STATIC_DRAW);
+
+    // Next, we tell openGL how that data is layed out.
+    // Unfortunately, glVertexAttribPointer doesn't accept sizes greater than 4, so we have to do it in 4 sets of 4. This is basically unavoidable.
+    // (On a more postive note, we can still use it as a matrix in the shader.)
+    // Note: We aren't using the same buffer as before, but we still start at the 4th attribute location.
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(0));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 4));
+    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 8));
+    glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 16, (void*)(sizeof(float) * 12));
+
+    // This leaves a problem though. If we just had the above code, we would end up using a different matrix for each vertex.
+    // In order to get around that problem, we use glVertexAttribDivisor
+    // By default, this value is 0, which is what makes the value advance for each vertex.
+    // By setting a value of 1, it will advance for each instance of the mesh that we render.
+    glVertexAttribDivisor(4, 1);
+    glVertexAttribDivisor(5, 1);
+    glVertexAttribDivisor(6, 1);
+    glVertexAttribDivisor(7, 1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-
-    // Enable vertex attribute
+    // Enable vertex attribute, all 8 of them
     for (int i = 0; i < 8; i++)
     {
         glEnableVertexAttribArray(i);
@@ -337,6 +347,8 @@ void Mesh::DrawInstanced(std::vector<glm::mat4> matrices)
 
     // Bind index buffer buffer and draw
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer);
+    // This call is just like the glDrawElements in the non instanced draw function, but
+    // we also pass in the number of instances we want to draw.
     glDrawElementsInstanced(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0, matrices.size());
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 

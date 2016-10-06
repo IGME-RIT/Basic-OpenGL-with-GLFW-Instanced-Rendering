@@ -1,6 +1,7 @@
-# Basic OpenGL with GLFW: Cube Map Reflections
+# Basic OpenGL with GLFW: Instanced Rendering
 
-Using cube maps, and reflection like that in the specular maps example, we can simulate models with reflective surfaces.
+Calling draw separately for each wastes a ton of time.
+Using a similar strategy to the spritebatching example, we can buffer our world matrices, and use them to render hundreds of objects in a single draw call.
 
 # Setup
 
