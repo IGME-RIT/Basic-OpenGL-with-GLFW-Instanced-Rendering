@@ -16,4 +16,4 @@ connections:
   - series: Basic OpenGL with GLFW
     title: Sprite Batching
   - series: Basic OpenGL with GLFW
-    title: Normal Mapping
+    title: Normal Maps
