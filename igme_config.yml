@@ -10,6 +10,8 @@ tags:
   - Graphics
   - Optmization
 extra_resources:
+  - link: http://www.learnopengl.com/#!Advanced-OpenGL/Instancing
+    title: An in depth article on the subject, with more example code.
 connections:
   - series: Basic OpenGL with GLFW
     title: Sprite Batching
