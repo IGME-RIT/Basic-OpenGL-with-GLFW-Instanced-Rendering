@@ -8,7 +8,7 @@ description: Render several objects with only one draw call!
 language: C++
 tags:
   - Graphics
-  - Optmization
+  - Opitmization
 extra_resources:
   - link: http://www.learnopengl.com/#!Advanced-OpenGL/Instancing
     title: An in depth article on the subject, with more example code.
