@@ -46,25 +46,6 @@ Mesh::Mesh(std::vector<Vertex3dUVNormal> vertices, std::vector<unsigned int> ind
 	glBindBuffer(GL_ARRAY_BUFFER, m_indexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), &m_indices[0], GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    //int pos = glGetAttribLocation(shader_instancedarrays.program, "transformmatrix");
-    //int pos1 = pos + 0;
-    //int pos2 = pos + 1;
-    //int pos3 = pos + 2;
-    //int pos4 = pos + 3;
-    //glEnableVertexAttribArray(pos1);
-    //glEnableVertexAttribArray(pos2);
-    //glEnableVertexAttribArray(pos3);
-    //glEnableVertexAttribArray(pos4);
-    //glBindBuffer(GL_ARRAY_BUFFER, VBO_containing_matrices);
-    //glVertexAttribPointer(pos1, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4 * 4, (void*)(0));
-    //glVertexAttribPointer(pos2, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4 * 4, (void*)(sizeof(float) * 4));
-    //glVertexAttribPointer(pos3, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4 * 4, (void*)(sizeof(float) * 8));
-    //glVertexAttribPointer(pos4, 4, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 4 * 4, (void*)(sizeof(float) * 12));
-    //glVertexAttribDivisor(pos1, 1);
-    //glVertexAttribDivisor(pos2, 1);
-    //glVertexAttribDivisor(pos3, 1);
-    //glVertexAttribDivisor(pos4, 1);
 }
 
 Mesh::Mesh(std::string filePath, bool calcTangents)
@@ -357,6 +338,12 @@ void Mesh::DrawInstanced(std::vector<glm::mat4> matrices)
     {
         glDisableVertexAttribArray(i);
     }
+    // It's important to reset the divisors to 0, even though we aren't using them in this program.
+    // They're global, so if some other draw call wanted to use the attributes, they would be screwed up.
+    glVertexAttribDivisor(4, 0);
+    glVertexAttribDivisor(5, 0);
+    glVertexAttribDivisor(6, 0);
+    glVertexAttribDivisor(7, 0);
 
 }
 
